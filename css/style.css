@@ -1,76 +1,40 @@
-/* Zoom sutil y overlay oscuro */
+/* Versión ultra simple y funcional */
 .card-cover {
-  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1), box-shadow 0.3s ease;
-  transform-origin: center;
+  background-image: var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-color: #1a1a2e;
+  transition: all 0.4s ease;
+  position: relative;
 }
 
-.card-cover:hover {
-  transform: scale(1.03);
-  box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
-}
-
-/* Overlay oscuro en hover para mejor contraste de texto */
 .card-cover::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6));
-  transition: background 0.3s ease;
+  inset: 0;
+  background: linear-gradient(135deg, #16213e, #0f3460);
   border-radius: 1rem;
-  pointer-events: none;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+  opacity: 0.5;
 }
 
-.card-cover:hover::before {
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8));
-}
-
-/* Texto con leve desplazamiento */
 .card-cover .d-flex.flex-column {
-  transition: transform 0.3s ease;
+  position: relative;
+  z-index: 2;
 }
 
-.card-cover:hover .d-flex.flex-column {
-  transform: translateY(-5px);
-}
-
-/* Tablets */
-@media (max-width: 768px) {
+/* Desktop hover */
+@media (hover: hover) {
   .card-cover:hover {
-    transform: scale(1.01); /* Menos zoom en móviles */
-  }
-  
-  .card-cover .p-5 {
-    padding: 2rem !important;
-  }
-  
-  .card-cover h3 {
-    font-size: calc(1.3rem + 1vw);
-  }
-  
-  /* Desactivar efectos pesados en táctil */
-  @media (hover: hover) {
-    .card-cover:hover {
-      transform: translateY(-6px);
-    }
+    transform: scale(1.03);
+    box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
   }
 }
 
-/* Móviles pequeños */
-@media (max-width: 576px) {
-  .card-cover {
-    transition: none; /* Mejor rendimiento en móviles */
-  }
-  
-  /* Hover más sutil en táctil */
-  .card-cover:active {
-    transform: scale(0.98);
-    transition: transform 0.1s;
-  }
-  
-  .card-cover .d-flex.flex-column {
-    padding: 1.5rem !important;
-  }
+/* Móvil: al hacer clic (focus) */
+.card-cover:focus {
+  outline: none;
+  transform: scale(1.02);
+  box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5);
 }
