@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SistemaPro — Panel de Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0f1a;
+    --bg2: #111827;
+    --bg3: #1a2236;
+    --surface: #162032;
+    --surface2: #1e2d47;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0f4ff;
+    --text2: #8a9dc0;
+    --text3: #5a6e8a;
+    --accent: #3b82f6;
+    --accent2: #60a5fa;
+    --accent-glow: rgba(59,130,246,0.18);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text); }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    animation: fadein .4s ease;
+  }
+  .login-bg {
+    position: absolute; inset: 0; overflow: hidden;
+  }
+  .login-bg::before {
+    content: '';
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+    top: -150px; left: -150px;
+  }
+  .login-bg::after {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%);
+    bottom: -100px; right: -100px;
+  }
+  .login-card {
+    position: relative; z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 48px 44px;
+    width: 100%; max-width: 420px;
+    animation: slideup .5s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes slideup { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:none; } }
+  @keyframes fadein { from { opacity:0; } to { opacity:1; } }
+
+  .login-logo {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 32px;
+  }
+  .login-logo-icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+  }
+  .login-logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+  .login-logo-text { font-family: var(--font-head); font-size: 22px; font-weight: 700; letter-spacing: -.3px; }
+  .login-logo-text span { color: var(--accent2); }
+
+  .login-title { font-family: var(--font-head); font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  .login-subtitle { color: var(--text2); font-size: 14px; margin-bottom: 32px; }
+
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 7px; letter-spacing: .4px; text-transform: uppercase; }
+  .field input {
+    width: 100%; padding: 11px 14px;
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: var(--font-body); font-size: 15px;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+  .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .field input::placeholder { color: var(--text3); }
+
+  .btn-login {
+    width: 100%; padding: 13px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-sm);
+    font-family: var(--font-head); font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 8px;
+    transition: background .2s, transform .15s;
+    letter-spacing: .2px;
+  }
+  .btn-login:hover { background: #2563eb; }
+  .btn-login:active { transform: scale(.98); }
+
+  .login-hint { text-align: center; margin-top: 20px; font-size: 13px; color: var(--text3); }
+  .login-hint span { color: var(--accent2); cursor: pointer; }
+
+  .login-error {
+    background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.25);
+    color: #fca5a5; border-radius: var(--radius-sm);
+    padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none;
+  }
+
+  /* ── DASHBOARD ── */
+  #dashboard { display: none; min-height: 100vh; flex-direction: column; }
+  #dashboard.visible { display: flex; animation: fadein .45s ease; }
+
+  /* Sidebar */
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; z-index: 50;
+    transition: width .3s cubic-bezier(.4,0,.2,1), transform .3s ease;
+    overflow: visible;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 20px 20px; border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .sidebar-logo-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .sidebar-logo-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .sidebar-logo-icon svg { width: 18px; height: 18px; fill: #fff; }
+  .sidebar-logo-name { font-family: var(--font-head); font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; transition: opacity .2s; }
+  .sidebar-logo-name span { color: var(--accent2); }
+
+  /* Collapse button — floats on right edge of sidebar, never overlaps logo */
+  .btn-collapse {
+    position: absolute; top: 22px; right: -13px; z-index: 60;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border2); color: var(--text2);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+    box-shadow: 2px 0 6px rgba(0,0,0,.35);
+  }
+  .btn-collapse:hover { background: var(--surface2); color: var(--text); }
+  .btn-collapse svg { width: 13px; height: 13px; transition: transform .3s cubic-bezier(.4,0,.2,1); }
+
+  .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; overflow-x: hidden; }
+  .nav-section {
+    font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 1px;
+    text-transform: uppercase; padding: 0 8px; margin: 16px 0 6px;
+    white-space: nowrap; overflow: hidden; transition: opacity .2s;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    color: var(--text2); font-size: 13.5px; font-weight: 400;
+    cursor: pointer; transition: background .15s, color .15s; text-decoration: none; margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-glow); color: var(--accent2); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .nav-label { transition: opacity .2s, width .2s; overflow: hidden; }
+
+  .sidebar-user {
+    padding: 16px 20px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; min-width: 240px;
+  }
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; transition: opacity .2s; }
+  .user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 11px; color: var(--text3); }
+  .btn-logout {
+    background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px;
+    border-radius: 6px; transition: color .15s, opacity .2s; display: flex; align-items: center; flex-shrink: 0;
+  }
+  .btn-logout:hover { color: var(--danger); }
+  .btn-logout svg { width: 16px; height: 16px; }
+
+  /* ── COLLAPSED STATE ── */
+  .sidebar.collapsed { width: 64px; }
+  .sidebar.collapsed .sidebar-logo { padding: 20px 0; justify-content: center; }
+  .sidebar.collapsed .sidebar-logo-left { justify-content: center; flex: none; }
+  .sidebar.collapsed .sidebar-logo-name { opacity: 0; width: 0; overflow: hidden; }
+  .sidebar.collapsed .btn-collapse svg { transform: rotate(180deg); }
+  .sidebar.collapsed .nav-section { opacity: 0; height: 0; margin: 0; padding: 0; pointer-events: none; }
+  .sidebar.collapsed .nav-item { padding: 9px 0; justify-content: center; gap: 0; }
+  .sidebar.collapsed .nav-label { opacity: 0; width: 0; }
+  .sidebar.collapsed .sidebar-user { padding: 16px 0; justify-content: center; }
+  .sidebar.collapsed .user-info { opacity: 0; width: 0; overflow: hidden; }
+  .sidebar.collapsed .btn-logout { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
+
+  /* Tooltip on collapsed nav items */
+  .sidebar.collapsed .nav-item { position: relative; }
+  .sidebar.collapsed .nav-item:hover::after {
+    content: attr(data-label);
+    position: absolute; left: 68px; top: 50%; transform: translateY(-50%);
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border2);
+    padding: 5px 10px; border-radius: 7px; font-size: 12px; white-space: nowrap;
+    pointer-events: none; z-index: 200;
+  }
+
+  /* Topbar */
+  .topbar {
+    position: fixed; top: 0; left: 240px; right: 0; height: 60px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px; gap: 16px; z-index: 40;
+    transition: left .3s cubic-bezier(.4,0,.2,1);
+  }
+  body.sidebar-collapsed .topbar { left: 64px; }
+  .hamburger {
+    display: none; background: none; border: none; color: var(--text2); cursor: pointer; padding: 4px;
+  }
+  .hamburger svg { width: 22px; height: 22px; }
+  .topbar-title { font-family: var(--font-head); font-size: 17px; font-weight: 600; flex: 1; }
+  .topbar-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    padding: 7px 12px; width: 220px;
+  }
+  .topbar-search svg { width: 15px; height: 15px; color: var(--text3); flex-shrink: 0; }
+  .topbar-search input {
+    background: none; border: none; color: var(--text); font-size: 13px;
+    font-family: var(--font-body); outline: none; width: 100%;
+  }
+  .topbar-search input::placeholder { color: var(--text3); }
+  .topbar-actions { display: flex; align-items: center; gap: 8px; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    background: none; border: 1px solid var(--border2); color: var(--text2); cursor: pointer;
+    transition: all .15s; position: relative;
+  }
+  .icon-btn:hover { background: var(--surface2); color: var(--text); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .badge {
+    position: absolute; top: -4px; right: -4px; width: 16px; height: 16px;
+    background: var(--danger); border-radius: 50%; font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; color: #fff; border: 2px solid var(--surface);
+  }
+
+  /* Main content */
+  .main {
+    margin-left: 240px; margin-top: 60px;
+    padding: 28px 28px 40px; min-height: calc(100vh - 60px);
+    transition: margin-left .3s cubic-bezier(.4,0,.2,1);
+  }
+  body.sidebar-collapsed .main { margin-left: 64px; }
+
+  /* Welcome banner */
+  .welcome-banner {
+    background: linear-gradient(130deg, #1a2e54 0%, #162032 100%);
+    border: 1px solid var(--border2); border-radius: 18px;
+    padding: 28px 32px; margin-bottom: 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    position: relative; overflow: hidden;
+  }
+  .welcome-banner::before {
+    content: '';
+    position: absolute; right: -40px; top: -60px;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.13) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .welcome-text h2 { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-bottom: 5px; }
+  .welcome-text p { color: var(--text2); font-size: 14px; }
+  .welcome-date { font-size: 13px; color: var(--text3); margin-top: 8px; }
+
+  .welcome-stats { display: flex; gap: 20px; flex-shrink: 0; }
+  .stat-pill {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 10px; padding: 12px 18px; text-align: center; min-width: 80px;
+  }
+  .stat-pill .num { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+  .stat-pill .lbl { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .stat-pill.green .num { color: var(--success); }
+  .stat-pill.blue .num { color: var(--accent2); }
+  .stat-pill.warn .num { color: var(--warning); }
+
+  /* Section heading */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .section-head h3 { font-family: var(--font-head); font-size: 15px; font-weight: 600; color: var(--text2); letter-spacing: .3px; }
+  .section-head a { font-size: 12px; color: var(--accent2); text-decoration: none; cursor: pointer; }
+
+  /* Module grid */
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .module-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 20px;
+    cursor: pointer; transition: all .22s ease;
+    position: relative; overflow: hidden; text-decoration: none;
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .module-card::before {
+    content: ''; position: absolute; inset: 0;
+    opacity: 0; transition: opacity .22s;
+  }
+  .module-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,.3);
+  }
+  .module-card:hover::before { opacity: 1; }
+
+  /* Color variants */
+  .module-card.blue::before  { background: radial-gradient(circle at top left, rgba(59,130,246,.07), transparent 60%); }
+  .module-card.teal::before  { background: radial-gradient(circle at top left, rgba(16,185,129,.07), transparent 60%); }
+  .module-card.amber::before { background: radial-gradient(circle at top left, rgba(245,158,11,.07), transparent 60%); }
+  .module-card.violet::before{ background: radial-gradient(circle at top left, rgba(139,92,246,.07), transparent 60%); }
+  .module-card.rose::before  { background: radial-gradient(circle at top left, rgba(244,63,94,.07), transparent 60%); }
+  .module-card.cyan::before  { background: radial-gradient(circle at top left, rgba(6,182,212,.07), transparent 60%); }
+  .module-card.orange::before{ background: radial-gradient(circle at top left, rgba(249,115,22,.07), transparent 60%); }
+  .module-card.slate::before { background: radial-gradient(circle at top left, rgba(100,116,139,.07), transparent 60%); }
+
+  .mod-icon {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 16px;
+  }
+  .mod-icon svg { width: 24px; height: 24px; }
+  .blue .mod-icon  { background: rgba(59,130,246,.15);  color: #60a5fa; }
+  .teal .mod-icon  { background: rgba(16,185,129,.15);  color: #34d399; }
+  .amber .mod-icon { background: rgba(245,158,11,.15);  color: #fbbf24; }
+  .violet .mod-icon{ background: rgba(139,92,246,.15);  color: #a78bfa; }
+  .rose .mod-icon  { background: rgba(244,63,94,.15);   color: #fb7185; }
+  .cyan .mod-icon  { background: rgba(6,182,212,.15);   color: #22d3ee; }
+  .orange .mod-icon{ background: rgba(249,115,22,.15);  color: #fb923c; }
+  .slate .mod-icon { background: rgba(100,116,139,.15); color: #94a3b8; }
+
+  .mod-name { font-family: var(--font-head); font-size: 15px; font-weight: 600; margin-bottom: 5px; }
+  .mod-desc { font-size: 12.5px; color: var(--text3); line-height: 1.55; }
+  .mod-footer {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .mod-tag {
+    font-size: 10px; font-weight: 600; letter-spacing: .4px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 5px;
+  }
+  .blue  .mod-tag { background: rgba(59,130,246,.12);  color: #60a5fa; }
+  .teal  .mod-tag { background: rgba(16,185,129,.12);  color: #34d399; }
+  .amber .mod-tag { background: rgba(245,158,11,.12);  color: #fbbf24; }
+  .violet.mod-tag { background: rgba(139,92,246,.12);  color: #a78bfa; }
+  .rose  .mod-tag { background: rgba(244,63,94,.12);   color: #fb7185; }
+  .cyan  .mod-tag { background: rgba(6,182,212,.12);   color: #22d3ee; }
+  .orange.mod-tag { background: rgba(249,115,22,.12);  color: #fb923c; }
+  .slate .mod-tag { background: rgba(100,116,139,.12); color: #94a3b8; }
+
+  .mod-arrow { color: var(--text3); transition: transform .2s, color .2s; }
+  .module-card:hover .mod-arrow { transform: translateX(4px); color: var(--text2); }
+  .mod-arrow svg { width: 16px; height: 16px; }
+
+  /* Recent activity */
+  .activity-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px;
+  }
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px;
+  }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .panel-head h4 { font-family: var(--font-head); font-size: 14px; font-weight: 600; }
+  .panel-head a { font-size: 12px; color: var(--accent2); cursor: pointer; text-decoration: none; }
+
+  .activity-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .act-dot {
+    width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+  }
+  .act-dot.blue   { background: #60a5fa; }
+  .act-dot.green  { background: var(--success); }
+  .act-dot.amber  { background: var(--warning); }
+  .act-dot.red    { background: var(--danger); }
+  .act-info { flex: 1; min-width: 0; }
+  .act-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .act-meta  { font-size: 11px; color: var(--text3); }
+
+  .status-badge {
+    font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 5px; text-transform: uppercase;
+    letter-spacing: .4px; flex-shrink: 0;
+  }
+  .status-open  { background: rgba(59,130,246,.12);  color: #60a5fa; }
+  .status-done  { background: rgba(16,185,129,.12);  color: #34d399; }
+  .status-pend  { background: rgba(245,158,11,.12);  color: #fbbf24; }
+  .status-crit  { background: rgba(244,63,94,.12);   color: #fb7185; }
+
+  /* Overlay for mobile sidebar */
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 45;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 20px; border-radius: 12px; z-index: 999;
+    font-size: 14px; font-family: var(--font-body); font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
+    border: 1px solid transparent; min-width: 240px; max-width: 380px;
+    white-space: nowrap;
+  }
+  .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+  .toast-success { background: #0d2b1f; border-color: rgba(16,185,129,.35); color: #34d399; }
+  .toast-error   { background: #2b0d0d; border-color: rgba(239,68,68,.35);  color: #fca5a5; }
+  .toast-icon svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: none; }
+    .sidebar.collapsed { width: 240px; transform: translateX(-100%); }
+    .sidebar.collapsed.open { transform: none; }
+    .topbar { left: 0 !important; }
+    .main { margin-left: 0 !important; padding: 20px 16px 32px; }
+    .hamburger { display: flex; }
+    .topbar-search { display: none; }
+    .welcome-stats { display: none; }
+    .activity-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .modules-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .login-card { padding: 36px 24px; }
+    .welcome-banner { padding: 22px 20px; }
+    .welcome-text h2 { font-size: 18px; }
+  }
+  @media (max-width: 380px) {
+    .modules-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="login-screen">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="login-logo-text">Sistema<span>Pro</span></span>
+    </div>
+    <h1 class="login-title">Bienvenido</h1>
+    <p class="login-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+
+    <div class="field">
+      <label>Usuario</label>
+      <input type="text" id="usr" placeholder="nombre@empresa.com" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="pwd" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" onclick="doLogin()">Iniciar sesión</button>
+    <p class="login-hint">¿Olvidaste tu contraseña? <span>Recuperar acceso</span></p>
+  </div>
+</div>
+
+<!-- ════════════ DASHBOARD ════════════ -->
+<div id="dashboard">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <!-- Collapse toggle — floats on the right edge -->
+    <button class="btn-collapse" onclick="toggleCollapse()" title="Contraer / expandir menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-left">
+        <div class="sidebar-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <span class="sidebar-logo-name">Sistema<span>Pro</span></span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <a class="nav-item active" href="#" data-label="Panel de control">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span class="nav-label">Panel de control</span>
+      </a>
+      <a class="nav-item" href="#" data-label="Actividad reciente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="nav-label">Actividad reciente</span>
+      </a>
+
+      <div class="nav-section">Módulos</div>
+      <a class="nav-item" href="#" data-label="Control de Vehículos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        <span class="nav-label">Control de Vehículos</span>
+      </a>
+      <a class="nav-item" href="#" data-label="Almacén">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14M5 8a2 2 0 01-2-2V4h18v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M10 12h4"/></svg>
+        <span class="nav-label">Almacén</span>
+      </a>
+      <a class="nav-item" href="#" data-label="Tickets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span class="nav-label">Tickets</span>
+      </a>
+      <a class="nav-item" href="#" data-label="Pases de Salida">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span class="nav-label">Pases de Salida</span>
+      </a>
+      <a class="nav-item" href="#" data-label="Viáticos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        <span class="nav-label">Viáticos</span>
+      </a>
+      <a class="nav-item" href="#" data-label="Lector QR">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 00-2 2v3M8 21V13H3M21 13h-5M13 3v5M13 13h2M13 21v-3"/></svg>
+        <span class="nav-label">Lector QR</span>
+      </a>
+      <a class="nav-item" href="#" data-label="Archivo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        <span class="nav-label">Archivo</span>
+      </a>
+
+      <div class="nav-section">Sistema</div>
+      <a class="nav-item" href="#" data-label="Configuración">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="nav-label">Configuración</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebar-avatar">AG</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebar-name">Admin General</div>
+        <div class="user-role">Administrador</div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()" title="Cerrar sesión">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topbar-title">Panel de Control</div>
+    <div class="topbar-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" placeholder="Buscar módulo...">
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn">
+        <div class="badge">3</div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Welcome banner -->
+    <div class="welcome-banner">
+      <div class="welcome-text">
+        <h2>Buenos días, <span id="banner-name">Administrador</span> 👋</h2>
+        <p>Tienes 3 tickets sin atender y 2 pases de salida pendientes de autorizar.</p>
+        <div class="welcome-date" id="banner-date"></div>
+      </div>
+      <div class="welcome-stats">
+        <div class="stat-pill green"><div class="num">12</div><div class="lbl">Activos</div></div>
+        <div class="stat-pill blue"><div class="num">47</div><div class="lbl">Registros</div></div>
+        <div class="stat-pill warn"><div class="num">5</div><div class="lbl">Pendientes</div></div>
+      </div>
+    </div>
+
+    <!-- Modules -->
+    <div class="section-head">
+      <h3>Módulos del sistema</h3>
+      <a href="#">Ver todos</a>
+    </div>
+
+    <div class="modules-grid">
+
+      <a class="module-card blue" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div class="mod-name">Control de Vehículos</div>
+        <div class="mod-desc">Gestión de flota, asignaciones y mantenimiento vehicular.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Flota</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+      <a class="module-card teal" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 8h14M5 8a2 2 0 01-2-2V4h18v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M10 12h4"/></svg>
+        </div>
+        <div class="mod-name">Almacén</div>
+        <div class="mod-desc">Inventario, entradas, salidas y control de stock.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Inventario</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+      <a class="module-card amber" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        </div>
+        <div class="mod-name">Tickets Técnicos</div>
+        <div class="mod-desc">Solicitudes de asistencia técnica, seguimiento y resolución.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Soporte</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+      <a class="module-card violet" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <div class="mod-name">Pases de Salida</div>
+        <div class="mod-desc">Autorización y registro de salidas de personal y materiales.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Seguridad</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+      <a class="module-card rose" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <div class="mod-name">Viáticos</div>
+        <div class="mod-desc">Solicitud, aprobación y liquidación de gastos de viaje.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Finanzas</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+      <a class="module-card cyan" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 00-2 2v3M8 21V13H3M21 13h-5M13 3v5M13 13h2M13 21v-3"/></svg>
+        </div>
+        <div class="mod-name">Lector QR</div>
+        <div class="mod-desc">Escaneo, generación y verificación de códigos QR.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Digital</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+      <a class="module-card orange" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/><path d="M9 13h6M9 17h4"/></svg>
+        </div>
+        <div class="mod-name">Archivo</div>
+        <div class="mod-desc">Gestión documental, expedientes y búsqueda de archivos.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Documentos</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+      <a class="module-card slate" href="#">
+        <div class="mod-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="mod-name">Configuración</div>
+        <div class="mod-desc">Usuarios, permisos, parámetros y ajustes del sistema.</div>
+        <div class="mod-footer">
+          <span class="mod-tag">Admin</span>
+          <span class="mod-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></span>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Activity row -->
+    <div class="activity-row">
+      <div class="panel">
+        <div class="panel-head">
+          <h4>Actividad reciente</h4>
+          <a href="#">Ver todo</a>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot blue"></div>
+          <div class="act-info">
+            <div class="act-title">Vehículo F-250 asignado</div>
+            <div class="act-meta">Hace 15 min · Control de Vehículos</div>
+          </div>
+          <span class="status-badge status-done">Listo</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot amber"></div>
+          <div class="act-info">
+            <div class="act-title">Ticket #0047 — Falla en red</div>
+            <div class="act-meta">Hace 1 hora · Soporte Técnico</div>
+          </div>
+          <span class="status-badge status-open">Abierto</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot green"></div>
+          <div class="act-info">
+            <div class="act-title">Pase de salida autorizado</div>
+            <div class="act-meta">Hace 2 horas · Pases de Salida</div>
+          </div>
+          <span class="status-badge status-done">Aprobado</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot red"></div>
+          <div class="act-info">
+            <div class="act-title">Solicitud de viáticos urgente</div>
+            <div class="act-meta">Hace 3 horas · Viáticos</div>
+          </div>
+          <span class="status-badge status-crit">Urgente</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h4>Tickets pendientes</h4>
+          <a href="#">Gestionar</a>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot amber"></div>
+          <div class="act-info">
+            <div class="act-title">Impresora fuera de servicio — Área 3</div>
+            <div class="act-meta">Prioridad media · Juan Pérez</div>
+          </div>
+          <span class="status-badge status-pend">Pendiente</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot red"></div>
+          <div class="act-info">
+            <div class="act-title">Servidor caído — Sala de servidores</div>
+            <div class="act-meta">Prioridad alta · IT Dept.</div>
+          </div>
+          <span class="status-badge status-crit">Crítico</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot blue"></div>
+          <div class="act-info">
+            <div class="act-title">Instalación de software — PC 12</div>
+            <div class="act-meta">Prioridad baja · Ana López</div>
+          </div>
+          <span class="status-badge status-open">Nuevo</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-dot green"></div>
+          <div class="act-info">
+            <div class="act-title">Configuración de red WiFi</div>
+            <div class="act-meta">Prioridad media · Soporte</div>
+          </div>
+          <span class="status-badge status-pend">En proceso</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const USERS = { 'admin': '1234', 'usuario': 'pass' };
+  const NAMES = { 'admin': 'Administrador', 'usuario': 'Usuario' };
+
+  /* ── TOAST ── */
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const txt  = document.getElementById('toast-msg');
+    t.className = 'toast toast-' + type;
+    icon.innerHTML = type === 'success'
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
+    txt.textContent = msg;
+    t.classList.add('visible');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('visible'), 3200);
+  }
+
+  function doLogin() {
+    const usr = document.getElementById('usr').value.trim().toLowerCase();
+    const pwd = document.getElementById('pwd').value;
+    if (USERS[usr] && USERS[usr] === pwd) {
+      showToast('Acceso correcto. Bienvenido, ' + NAMES[usr] + '.', 'success');
+      const name = NAMES[usr];
+      document.getElementById('banner-name').textContent = name;
+      const initials = name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+      document.getElementById('sidebar-avatar').textContent = initials;
+      document.getElementById('sidebar-name').textContent = name;
+      setTimeout(() => {
+        const ls = document.getElementById('login-screen');
+        ls.style.transition = 'opacity .35s';
+        ls.style.opacity = '0';
+        setTimeout(() => {
+          ls.style.display = 'none';
+          document.getElementById('dashboard').classList.add('visible');
+          setDate();
+        }, 340);
+      }, 900);
+    } else {
+      showToast('Usuario o contraseña incorrectos.', 'error');
+      const card = document.querySelector('.login-card');
+      card.style.animation = 'shake .4s ease';
+      setTimeout(() => card.style.animation = '', 420);
+    }
+  }
+
+  function doLogout() {
+    document.getElementById('dashboard').classList.remove('visible');
+    const ls = document.getElementById('login-screen');
+    ls.style.display = 'flex';
+    ls.style.opacity = '1';
+    ls.style.transition = '';
+    document.getElementById('usr').value = '';
+    document.getElementById('pwd').value = '';
+    showToast('Sesión cerrada correctamente.', 'success');
+  }
+
+  function toggleCollapse() {
+    document.getElementById('sidebar').classList.toggle('collapsed');
+    document.body.classList.toggle('sidebar-collapsed');
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+  }
+
+  function setDate() {
+    const d = new Date();
+    const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+    document.getElementById('banner-date').textContent = d.toLocaleDateString('es-MX', opts);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('pwd').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+    document.getElementById('usr').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('pwd').focus(); });
+  });
+
+  const _s = document.createElement('style');
+  _s.textContent = '@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}';
+  document.head.appendChild(_s);
+</script>
+<!-- Toast notification -->
+<div id="toast" class="toast">
+  <span id="toast-icon" class="toast-icon"></span>
+  <span id="toast-msg"></span>
+</div>
+</body>
+</html>
