@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SistemaPro — Pases de Salida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────────────────────────────
+   RESET & TOKENS
+───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #0b0f1a;
+  --bg2:          #111827;
+  --bg3:          #1a2236;
+  --surface:      #162032;
+  --surface2:     #1e2d47;
+  --border:       rgba(255,255,255,0.07);
+  --border2:      rgba(255,255,255,0.13);
+  --text:         #f0f4ff;
+  --text2:        #8a9dc0;
+  --text3:        #5a6e8a;
+  --accent:       #3b82f6;
+  --accent2:      #60a5fa;
+  --accent-glow:  rgba(59,130,246,0.18);
+  --violet:       #8b5cf6;
+  --violet-glow:  rgba(139,92,246,0.15);
+  --success:      #10b981;
+  --warning:      #f59e0b;
+  --danger:       #ef4444;
+  --radius:       14px;
+  --radius-sm:    8px;
+  --font-head:    'Syne', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+}
+
+html, body { height: 100%; font-family: var(--font-body); background: var(--bg); color: var(--text); }
+
+/* ─────────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────────── */
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 240px;
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 50;
+  transition: width .3s cubic-bezier(.4,0,.2,1), transform .3s ease;
+  overflow: visible;
+}
+.btn-collapse {
+  position: absolute; top: 22px; right: -13px; z-index: 60;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border2); color: var(--text2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+  box-shadow: 2px 0 6px rgba(0,0,0,.35);
+}
+.btn-collapse:hover { background: var(--surface2); color: var(--text); }
+.btn-collapse svg { width: 13px; height: 13px; transition: transform .3s cubic-bezier(.4,0,.2,1); }
+.sidebar.collapsed { width: 64px; }
+.sidebar.collapsed .btn-collapse svg { transform: rotate(180deg); }
+
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 20px; border-bottom: 1px solid var(--border); overflow: hidden;
+}
+.sidebar-logo-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.sidebar-logo-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.sidebar-logo-icon svg { width: 18px; height: 18px; fill: #fff; }
+.sidebar-logo-name { font-family: var(--font-head); font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; transition: opacity .2s; }
+.sidebar-logo-name span { color: var(--accent2); }
+.sidebar.collapsed .sidebar-logo { padding: 20px 0; justify-content: center; }
+.sidebar.collapsed .sidebar-logo-left { justify-content: center; flex: none; }
+.sidebar.collapsed .sidebar-logo-name { opacity: 0; width: 0; }
+
+.sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; overflow-x: hidden; }
+.nav-section {
+  font-size: 10px; font-weight: 600; color: var(--text3); letter-spacing: 1px;
+  text-transform: uppercase; padding: 0 8px; margin: 16px 0 6px;
+  white-space: nowrap; overflow: hidden; transition: opacity .2s;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  border-radius: var(--radius-sm); color: var(--text2); font-size: 13.5px;
+  cursor: pointer; transition: background .15s, color .15s; text-decoration: none;
+  margin-bottom: 2px; white-space: nowrap; overflow: hidden;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--violet-glow); color: #a78bfa; }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nav-label { transition: opacity .2s, width .2s; overflow: hidden; }
+.sidebar.collapsed .nav-section { opacity: 0; height: 0; margin: 0; padding: 0; pointer-events: none; }
+.sidebar.collapsed .nav-item { padding: 9px 0; justify-content: center; gap: 0; }
+.sidebar.collapsed .nav-label { opacity: 0; width: 0; }
+.sidebar.collapsed .nav-item { position: relative; }
+.sidebar.collapsed .nav-item:hover::after {
+  content: attr(data-label);
+  position: absolute; left: 68px; top: 50%; transform: translateY(-50%);
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border2);
+  padding: 5px 10px; border-radius: 7px; font-size: 12px; white-space: nowrap;
+  pointer-events: none; z-index: 200;
+}
+
+.sidebar-user {
+  padding: 16px 20px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--accent); display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; transition: opacity .2s; }
+.user-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--text3); }
+.btn-logout {
+  background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px;
+  border-radius: 6px; transition: color .15s; display: flex; align-items: center; flex-shrink: 0;
+}
+.btn-logout:hover { color: var(--danger); }
+.btn-logout svg { width: 16px; height: 16px; }
+.sidebar.collapsed .sidebar-user { padding: 16px 0; justify-content: center; }
+.sidebar.collapsed .user-info,
+.sidebar.collapsed .btn-logout { opacity: 0; width: 0; overflow: hidden; pointer-events: none; }
+
+/* ─────────────────────────────────────────────
+   TOPBAR
+───────────────────────────────────────────── */
+.topbar {
+  position: fixed; top: 0; left: 240px; right: 0; height: 60px;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; gap: 16px; z-index: 40;
+  transition: left .3s cubic-bezier(.4,0,.2,1);
+}
+body.sidebar-collapsed .topbar { left: 64px; }
+.hamburger { display: none; background: none; border: none; color: var(--text2); cursor: pointer; padding: 4px; }
+.hamburger svg { width: 22px; height: 22px; }
+
+.breadcrumb { display: flex; align-items: center; gap: 6px; flex: 1; }
+.breadcrumb a { font-size: 13px; color: var(--text3); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text2); }
+.breadcrumb .sep { color: var(--text3); font-size: 13px; }
+.breadcrumb .current { font-family: var(--font-head); font-size: 14px; font-weight: 600; color: #a78bfa; }
+
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid var(--border2); color: var(--text2); cursor: pointer;
+  transition: all .15s; position: relative;
+}
+.icon-btn:hover { background: var(--surface2); color: var(--text); }
+.icon-btn svg { width: 16px; height: 16px; }
+.badge {
+  position: absolute; top: -4px; right: -4px; width: 16px; height: 16px;
+  background: var(--danger); border-radius: 50%; font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; color: #fff; border: 2px solid var(--surface);
+}
+
+/* ─────────────────────────────────────────────
+   MAIN LAYOUT
+───────────────────────────────────────────── */
+.main {
+  margin-left: 240px; margin-top: 60px;
+  padding: 28px 28px 48px;
+  min-height: calc(100vh - 60px);
+  transition: margin-left .3s cubic-bezier(.4,0,.2,1);
+}
+body.sidebar-collapsed .main { margin-left: 64px; }
+
+/* ─────────────────────────────────────────────
+   PAGE HEADER
+───────────────────────────────────────────── */
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+}
+.page-header-left { display: flex; align-items: center; gap: 14px; }
+.page-icon {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: var(--violet-glow); border: 1px solid rgba(139,92,246,.25);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  color: #a78bfa;
+}
+.page-icon svg { width: 24px; height: 24px; }
+.page-title { font-family: var(--font-head); font-size: 22px; font-weight: 700; }
+.page-subtitle { font-size: 13px; color: var(--text3); margin-top: 2px; }
+
+.btn-primary {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--violet); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  padding: 10px 18px; font-family: var(--font-head); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .15s, transform .1s; white-space: nowrap;
+}
+.btn-primary:hover { background: #7c3aed; }
+.btn-primary:active { transform: scale(.97); }
+.btn-primary svg { width: 16px; height: 16px; }
+
+/* ─────────────────────────────────────────────
+   STATS ROW
+───────────────────────────────────────────── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  display: flex; align-items: center; gap: 14px;
+  transition: border-color .2s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-card-icon {
+  width: 42px; height: 42px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.stat-card-icon svg { width: 20px; height: 20px; }
+.stat-card-icon.violet { background: rgba(139,92,246,.15); color: #a78bfa; }
+.stat-card-icon.green  { background: rgba(16,185,129,.15);  color: #34d399; }
+.stat-card-icon.amber  { background: rgba(245,158,11,.15);  color: #fbbf24; }
+.stat-card-icon.red    { background: rgba(239,68,68,.15);   color: #f87171; }
+.stat-info { flex: 1; min-width: 0; }
+.stat-num { font-family: var(--font-head); font-size: 24px; font-weight: 700; line-height: 1; }
+.stat-lbl { font-size: 12px; color: var(--text3); margin-top: 4px; }
+.stat-delta { font-size: 11px; margin-top: 6px; }
+.stat-delta.up   { color: var(--success); }
+.stat-delta.down { color: var(--danger); }
+
+/* ─────────────────────────────────────────────
+   FILTER / TOOLBAR
+───────────────────────────────────────────── */
+.toolbar {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-bottom: 16px;
+}
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  padding: 8px 12px; flex: 1; min-width: 200px; max-width: 320px;
+}
+.search-box svg { width: 15px; height: 15px; color: var(--text3); flex-shrink: 0; }
+.search-box input {
+  background: none; border: none; color: var(--text);
+  font-family: var(--font-body); font-size: 13px; outline: none; width: 100%;
+}
+.search-box input::placeholder { color: var(--text3); }
+
+.filter-select {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--text2); font-family: var(--font-body); font-size: 13px;
+  padding: 8px 12px; cursor: pointer; outline: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6e8a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 14px;
+  padding-right: 32px;
+}
+.filter-select:focus { border-color: var(--violet); }
+
+.tab-group {
+  display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 3px; gap: 2px;
+}
+.tab-btn {
+  padding: 6px 14px; border-radius: 6px; border: none; background: none;
+  color: var(--text3); font-family: var(--font-body); font-size: 13px; cursor: pointer;
+  transition: background .15s, color .15s; white-space: nowrap;
+}
+.tab-btn.active { background: var(--violet); color: #fff; font-weight: 500; }
+.tab-btn:not(.active):hover { background: var(--surface2); color: var(--text2); }
+
+.btn-icon-outline {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: 1px solid var(--border2); color: var(--text2);
+  border-radius: var(--radius-sm); padding: 8px 12px;
+  font-family: var(--font-body); font-size: 13px; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+}
+.btn-icon-outline:hover { border-color: var(--accent); color: var(--accent2); }
+.btn-icon-outline svg { width: 14px; height: 14px; }
+
+/* ─────────────────────────────────────────────
+   TABLE
+───────────────────────────────────────────── */
+.table-wrap {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden;
+}
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 780px; }
+thead { background: var(--bg2); }
+th {
+  padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600;
+  color: var(--text3); text-transform: uppercase; letter-spacing: .5px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--text2); }
+th .sort-icon { display: inline-block; margin-left: 4px; opacity: .4; font-size: 10px; }
+th.asc  .sort-icon::after { content: '▲'; }
+th.desc .sort-icon::after { content: '▼'; }
+th:not(.asc):not(.desc) .sort-icon::after { content: '⇅'; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .12s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.025); }
+td { padding: 13px 16px; font-size: 13.5px; vertical-align: middle; }
+
+.td-id { font-family: var(--font-head); font-size: 12px; color: var(--text3); }
+.td-employee { display: flex; align-items: center; gap: 10px; }
+.emp-avatar {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-size: 12px; font-weight: 700; color: #fff;
+}
+.emp-name { font-weight: 500; font-size: 13.5px; }
+.emp-dept { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+.badge-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  letter-spacing: .3px; text-transform: uppercase; white-space: nowrap;
+}
+.badge-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-pending  { background: rgba(245,158,11,.12); color: #fbbf24; }
+.status-approved { background: rgba(16,185,129,.12);  color: #34d399; }
+.status-rejected { background: rgba(239,68,68,.12);   color: #f87171; }
+.status-returned { background: rgba(139,92,246,.12);  color: #a78bfa; }
+.status-expired  { background: rgba(100,116,139,.12); color: #94a3b8; }
+
+.td-type {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--text2); background: var(--surface2);
+  padding: 3px 9px; border-radius: 6px; border: 1px solid var(--border);
+}
+.td-type svg { width: 12px; height: 12px; }
+
+.td-actions { display: flex; align-items: center; gap: 6px; }
+.action-btn {
+  width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border2);
+  background: none; color: var(--text3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.action-btn svg { width: 14px; height: 14px; }
+.action-btn.view:hover   { border-color: var(--accent2); color: var(--accent2); background: var(--accent-glow); }
+.action-btn.approve:hover{ border-color: var(--success); color: var(--success); background: rgba(16,185,129,.1); }
+.action-btn.reject:hover { border-color: var(--danger);  color: var(--danger);  background: rgba(239,68,68,.1); }
+.action-btn.print:hover  { border-color: var(--text2); color: var(--text); background: var(--surface2); }
+
+.table-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-top: 1px solid var(--border); gap: 12px; flex-wrap: wrap;
+}
+.table-info { font-size: 12px; color: var(--text3); }
+.pagination { display: flex; align-items: center; gap: 4px; }
+.page-btn {
+  width: 30px; height: 30px; border-radius: 7px; border: 1px solid var(--border2);
+  background: none; color: var(--text3); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+  transition: all .15s;
+}
+.page-btn:hover { border-color: var(--violet); color: #a78bfa; background: var(--violet-glow); }
+.page-btn.active { background: var(--violet); color: #fff; border-color: var(--violet); }
+.page-btn svg { width: 14px; height: 14px; }
+
+/* ─────────────────────────────────────────────
+   MODAL
+───────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 200;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 18px;
+  width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column;
+  transform: translateY(20px) scale(.97); transition: transform .28s cubic-bezier(.22,1,.36,1);
+  overflow: hidden;
+}
+.modal-overlay.open .modal { transform: none; }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px; border-bottom: 1px solid var(--border);
+}
+.modal-header-left { display: flex; align-items: center; gap: 12px; }
+.modal-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--violet-glow); border: 1px solid rgba(139,92,246,.25);
+  display: flex; align-items: center; justify-content: center; color: #a78bfa;
+}
+.modal-icon svg { width: 18px; height: 18px; }
+.modal-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+.modal-subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.btn-close {
+  background: none; border: 1px solid var(--border2); color: var(--text3);
+  width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.btn-close:hover { border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,.08); }
+.btn-close svg { width: 15px; height: 15px; }
+
+.modal-body { padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+
+/* Form fields */
+.field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-group.single { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.field label .req { color: var(--violet); margin-left: 2px; }
+.field input,
+.field select,
+.field textarea {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--text); font-family: var(--font-body); font-size: 13.5px;
+  padding: 10px 12px; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-glow);
+}
+.field input::placeholder,
+.field textarea::placeholder { color: var(--text3); }
+.field select { appearance: none; cursor: pointer; }
+.field textarea { resize: vertical; min-height: 72px; }
+
+.field-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.field-error { font-size: 11px; color: var(--danger); margin-top: 2px; display: none; }
+.field.has-error input,
+.field.has-error select { border-color: var(--danger); }
+.field.has-error .field-error { display: block; }
+
+.section-divider {
+  display: flex; align-items: center; gap: 10px; margin: 4px 0;
+}
+.section-divider span { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; white-space: nowrap; }
+.section-divider::before,
+.section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+.modal-footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  padding: 18px 24px; border-top: 1px solid var(--border);
+}
+.btn-cancel {
+  background: none; border: 1px solid var(--border2); color: var(--text2);
+  border-radius: var(--radius-sm); padding: 9px 18px;
+  font-family: var(--font-body); font-size: 13.5px; cursor: pointer; transition: all .15s;
+}
+.btn-cancel:hover { border-color: var(--text2); color: var(--text); }
+.btn-submit {
+  background: var(--violet); color: #fff; border: none; border-radius: var(--radius-sm);
+  padding: 9px 22px; font-family: var(--font-head); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: background .15s, transform .1s;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-submit:hover { background: #7c3aed; }
+.btn-submit:active { transform: scale(.97); }
+.btn-submit svg { width: 15px; height: 15px; }
+.btn-submit .spinner { display: none; }
+.btn-submit.loading .spinner { display: block; animation: spin .8s linear infinite; }
+.btn-submit.loading .btn-text { opacity: .7; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─────────────────────────────────────────────
+   DETAIL PANEL (slide-in right)
+───────────────────────────────────────────── */
+.detail-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 190;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.detail-overlay.open { opacity: 1; pointer-events: auto; }
+.detail-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 95vw;
+  background: var(--surface); border-left: 1px solid var(--border2); z-index: 195;
+  display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+.detail-overlay.open .detail-panel { transform: none; }
+
+.detail-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px; border-bottom: 1px solid var(--border);
+}
+.detail-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+.detail-id { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.detail-body { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.detail-employee-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px;
+}
+.detail-emp-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-head); font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.detail-emp-name { font-family: var(--font-head); font-size: 15px; font-weight: 600; }
+.detail-emp-dept { font-size: 12px; color: var(--text3); margin-top: 3px; }
+.detail-emp-badge { margin-top: 6px; }
+
+.detail-section-title {
+  font-size: 11px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px;
+}
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.detail-field { display: flex; flex-direction: column; gap: 4px; }
+.detail-field-lbl { font-size: 11px; color: var(--text3); }
+.detail-field-val { font-size: 13.5px; font-weight: 500; }
+
+.timeline { display: flex; flex-direction: column; gap: 0; }
+.timeline-item { display: flex; gap: 12px; padding-bottom: 16px; position: relative; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item:not(:last-child)::before {
+  content: ''; position: absolute; left: 15px; top: 28px; bottom: 0;
+  width: 1px; background: var(--border);
+}
+.timeline-dot {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; border: 2px solid var(--border);
+  background: var(--bg2);
+}
+.timeline-dot svg { width: 13px; height: 13px; }
+.timeline-dot.violet { border-color: rgba(139,92,246,.4); color: #a78bfa; }
+.timeline-dot.green  { border-color: rgba(16,185,129,.4); color: #34d399; }
+.timeline-dot.red    { border-color: rgba(239,68,68,.4);  color: #f87171; }
+.timeline-dot.amber  { border-color: rgba(245,158,11,.4); color: #fbbf24; }
+.timeline-info { flex: 1; }
+.timeline-event { font-size: 13px; font-weight: 500; }
+.timeline-meta  { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+.detail-footer {
+  padding: 18px 24px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px;
+}
+.btn-approve {
+  flex: 1; background: rgba(16,185,129,.15); color: #34d399; border: 1px solid rgba(16,185,129,.3);
+  border-radius: var(--radius-sm); padding: 10px; font-family: var(--font-head); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-approve:hover { background: rgba(16,185,129,.25); }
+.btn-approve svg { width: 15px; height: 15px; }
+.btn-reject {
+  flex: 1; background: rgba(239,68,68,.1); color: #f87171; border: 1px solid rgba(239,68,68,.25);
+  border-radius: var(--radius-sm); padding: 10px; font-family: var(--font-head); font-size: 13px;
+  font-weight: 600; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-reject:hover { background: rgba(239,68,68,.2); }
+.btn-reject svg { width: 15px; height: 15px; }
+
+/* ─────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 20px; border-radius: 12px; z-index: 999;
+  font-size: 14px; font-family: var(--font-body); font-weight: 500;
+  opacity: 0; pointer-events: none;
+  transition: opacity .28s ease, transform .28s cubic-bezier(.22,1,.36,1);
+  border: 1px solid transparent; min-width: 240px;
+}
+.toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.toast-success { background: #0d2b1f; border-color: rgba(16,185,129,.35); color: #34d399; }
+.toast-error   { background: #2b0d0d; border-color: rgba(239,68,68,.35);  color: #fca5a5; }
+.toast-info    { background: #0d1b35; border-color: rgba(59,130,246,.35);  color: #93c5fd; }
+.toast-icon svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+/* ─────────────────────────────────────────────
+   OVERLAY SIDEBAR (mobile)
+───────────────────────────────────────────── */
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 45;
+}
+.sidebar-overlay.active { display: block; }
+
+/* ─────────────────────────────────────────────
+   EMPTY STATE
+───────────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; color: var(--text3); text-align: center;
+}
+.empty-state svg { width: 52px; height: 52px; opacity: .3; margin-bottom: 16px; }
+.empty-state h4 { font-family: var(--font-head); font-size: 16px; color: var(--text2); margin-bottom: 6px; }
+.empty-state p { font-size: 13px; }
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: none; }
+  .sidebar.collapsed { width: 240px; transform: translateX(-100%); }
+  .sidebar.collapsed.open { transform: none; }
+  .topbar { left: 0 !important; }
+  .main { margin-left: 0 !important; padding: 20px 16px 40px; }
+  .hamburger { display: flex; }
+}
+@media (max-width: 640px) {
+  .stats-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .toolbar { gap: 8px; }
+  .search-box { max-width: 100%; }
+  .tab-group { flex: 1; }
+  .field-group { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .stats-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+════════════════════════════════════════════ -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<aside class="sidebar" id="sidebar">
+  <button class="btn-collapse" onclick="toggleCollapse()" title="Contraer / expandir menú">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-left">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="sidebar-logo-name">Sistema<span>Pro</span></span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Principal</div>
+    <a class="nav-item" href="panel-sistema.html" data-label="Panel de control">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="nav-label">Panel de control</span>
+    </a>
+
+    <div class="nav-section">Módulos</div>
+    <a class="nav-item" href="#" data-label="Control de Vehículos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span class="nav-label">Control de Vehículos</span>
+    </a>
+    <a class="nav-item" href="#" data-label="Almacén">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14M5 8a2 2 0 01-2-2V4h18v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8M10 12h4"/></svg>
+      <span class="nav-label">Almacén</span>
+    </a>
+    <a class="nav-item" href="#" data-label="Tickets">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span class="nav-label">Tickets</span>
+    </a>
+    <a class="nav-item active" href="#" data-label="Pases de Salida">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      <span class="nav-label">Pases de Salida</span>
+    </a>
+    <a class="nav-item" href="#" data-label="Viáticos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      <span class="nav-label">Viáticos</span>
+    </a>
+    <a class="nav-item" href="#" data-label="Lector QR">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="16" width="5" height="5"/><path d="M21 16h-3a2 2 0 00-2 2v3M8 21V13H3M21 13h-5M13 3v5M13 13h2M13 21v-3"/></svg>
+      <span class="nav-label">Lector QR</span>
+    </a>
+    <a class="nav-item" href="#" data-label="Archivo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+      <span class="nav-label">Archivo</span>
+    </a>
+
+    <div class="nav-section">Sistema</div>
+    <a class="nav-item" href="#" data-label="Configuración">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span class="nav-label">Configuración</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-user">
+    <div class="user-avatar">AG</div>
+    <div class="user-info">
+      <div class="user-name">Admin General</div>
+      <div class="user-role">Administrador</div>
+    </div>
+    <button class="btn-logout" title="Cerrar sesión">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════
+     TOPBAR
+════════════════════════════════════════════ -->
+<header class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <nav class="breadcrumb">
+    <a href="panel-sistema.html">Inicio</a>
+    <span class="sep">/</span>
+    <span class="current">Pases de Salida</span>
+  </nav>
+  <div class="topbar-actions">
+    <button class="icon-btn">
+      <div class="badge">2</div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <div>
+        <div class="page-title">Pases de Salida</div>
+        <div class="page-subtitle">Gestión y autorización de salidas de personal y materiales</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="openModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo Pase
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-card-icon violet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      </div>
+      <div class="stat-info">
+        <!-- AJAX: GET /api/pases/stats → total -->
+        <div class="stat-num" id="stat-total">48</div>
+        <div class="stat-lbl">Total del mes</div>
+        <div class="stat-delta up">↑ 12% vs mes anterior</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="stat-info">
+        <!-- AJAX: GET /api/pases/stats → pendientes -->
+        <div class="stat-num" id="stat-pending">7</div>
+        <div class="stat-lbl">Pendientes</div>
+        <div class="stat-delta down">↑ 3 nuevos hoy</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      </div>
+      <div class="stat-info">
+        <!-- AJAX: GET /api/pases/stats → aprobados -->
+        <div class="stat-num" id="stat-approved">35</div>
+        <div class="stat-lbl">Aprobados</div>
+        <div class="stat-delta up">↑ 8% vs mes anterior</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon red">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      </div>
+      <div class="stat-info">
+        <!-- AJAX: GET /api/pases/stats → rechazados -->
+        <div class="stat-num" id="stat-rejected">6</div>
+        <div class="stat-lbl">Rechazados</div>
+        <div class="stat-delta down">↓ 2% vs mes anterior</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <!-- AJAX: input event → GET /api/pases?q={value} -->
+      <input type="text" id="search-input" placeholder="Buscar por nombre, folio o departamento..." oninput="handleSearch(this.value)">
+    </div>
+
+    <select class="filter-select" id="filter-status" onchange="handleFilter()">
+      <!-- AJAX: change → GET /api/pases?estatus={value} -->
+      <option value="">Todos los estatus</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="aprobado">Aprobado</option>
+      <option value="rechazado">Rechazado</option>
+      <option value="devuelto">Devuelto</option>
+      <option value="vencido">Vencido</option>
+    </select>
+
+    <select class="filter-select" id="filter-type" onchange="handleFilter()">
+      <!-- AJAX: change → GET /api/pases?tipo={value} -->
+      <option value="">Todos los tipos</option>
+      <option value="personal">Personal</option>
+      <option value="material">Material</option>
+      <option value="vehiculo">Vehículo</option>
+      <option value="visita">Visita</option>
+    </select>
+
+    <select class="filter-select" id="filter-date" onchange="handleFilter()">
+      <!-- AJAX: change → GET /api/pases?periodo={value} -->
+      <option value="today">Hoy</option>
+      <option value="week">Esta semana</option>
+      <option value="month" selected>Este mes</option>
+      <option value="custom">Rango personalizado</option>
+    </select>
+
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="switchTab(this,'todos')">Todos</button>
+      <button class="tab-btn" onclick="switchTab(this,'mis')">Mis pases</button>
+      <button class="tab-btn" onclick="switchTab(this,'autorizar')">Por autorizar</button>
+    </div>
+
+    <button class="btn-icon-outline" onclick="exportar()">
+      <!-- AJAX: click → GET /api/pases/export?format=xlsx -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Exportar
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div class="table-scroll">
+      <table id="pases-table">
+        <thead>
+          <tr>
+            <th class="sortable asc" onclick="sortTable('folio')">Folio <span class="sort-icon"></span></th>
+            <th>Empleado</th>
+            <th class="sortable" onclick="sortTable('tipo')">Tipo <span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortTable('salida')">Salida <span class="sort-icon"></span></th>
+            <th class="sortable" onclick="sortTable('regreso')">Regreso <span class="sort-icon"></span></th>
+            <th>Motivo</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="pases-tbody">
+          <!-- AJAX: GET /api/pases → renderRows(data) fills this tbody -->
+          <!-- Filas de ejemplo (reemplazar con renderRows en tu AJAX) -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty state — mostrar cuando la respuesta AJAX viene vacía -->
+    <div class="empty-state" id="empty-state" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      <h4>Sin resultados</h4>
+      <p>No se encontraron pases con los filtros aplicados.</p>
+    </div>
+
+    <div class="table-footer">
+      <!-- AJAX: actualizar con meta de paginación del servidor -->
+      <div class="table-info" id="table-info">Mostrando 1–10 de 48 registros</div>
+      <div class="pagination" id="pagination">
+        <button class="page-btn" onclick="goPage('prev')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="page-btn active" onclick="goPage(1)">1</button>
+        <button class="page-btn" onclick="goPage(2)">2</button>
+        <button class="page-btn" onclick="goPage(3)">3</button>
+        <button class="page-btn" onclick="goPage('next')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════
+     MODAL — NUEVO / EDITAR PASE
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <div>
+          <div class="modal-title" id="modal-title">Nuevo Pase de Salida</div>
+          <div class="modal-subtitle" id="modal-subtitle">Completa los datos del pase</div>
+        </div>
+      </div>
+      <button class="btn-close" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- AJAX: POST /api/pases (crear) o PUT /api/pases/{id} (editar) -->
+      <!-- Campo oculto para edición -->
+      <input type="hidden" id="pase-id">
+
+      <div class="section-divider"><span>Datos del solicitante</span></div>
+
+      <div class="field-group">
+        <div class="field" id="field-empleado">
+          <label>Empleado <span class="req">*</span></label>
+          <!-- AJAX: GET /api/empleados?q={input} para autocompletar -->
+          <input type="text" id="inp-empleado" placeholder="Buscar empleado..." autocomplete="off">
+          <span class="field-hint">Escribe el nombre o número de empleado</span>
+          <span class="field-error">Campo requerido</span>
+        </div>
+        <div class="field" id="field-departamento">
+          <label>Departamento <span class="req">*</span></label>
+          <!-- AJAX: GET /api/departamentos → poblar select -->
+          <select id="inp-departamento">
+            <option value="">Seleccionar departamento</option>
+            <option value="TI">Tecnologías de Información</option>
+            <option value="RH">Recursos Humanos</option>
+            <option value="FIN">Finanzas</option>
+            <option value="OPS">Operaciones</option>
+            <option value="VEN">Ventas</option>
+            <option value="ADM">Administración</option>
+            <option value="LOG">Logística</option>
+          </select>
+          <span class="field-error">Campo requerido</span>
+        </div>
+      </div>
+
+      <div class="section-divider"><span>Detalles del pase</span></div>
+
+      <div class="field-group">
+        <div class="field" id="field-tipo">
+          <label>Tipo de pase <span class="req">*</span></label>
+          <select id="inp-tipo">
+            <option value="">Seleccionar tipo</option>
+            <option value="personal">Personal</option>
+            <option value="material">Material / Equipo</option>
+            <option value="vehiculo">Vehículo</option>
+            <option value="visita">Visita</option>
+          </select>
+          <span class="field-error">Campo requerido</span>
+        </div>
+        <div class="field">
+          <label>Destino <span class="req">*</span></label>
+          <input type="text" id="inp-destino" placeholder="Ej. Proveedor, domicilio, etc.">
+          <span class="field-error">Campo requerido</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field" id="field-salida">
+          <label>Fecha y hora de salida <span class="req">*</span></label>
+          <input type="datetime-local" id="inp-salida">
+          <span class="field-error">Campo requerido</span>
+        </div>
+        <div class="field">
+          <label>Fecha y hora de regreso <span class="req">*</span></label>
+          <input type="datetime-local" id="inp-regreso">
+          <span class="field-error">Campo requerido</span>
+        </div>
+      </div>
+
+      <div class="field-group single">
+        <div class="field" id="field-motivo">
+          <label>Motivo de salida <span class="req">*</span></label>
+          <textarea id="inp-motivo" placeholder="Describe brevemente el motivo de la salida..."></textarea>
+          <span class="field-error">Campo requerido</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label>Autoriza</label>
+          <!-- AJAX: GET /api/usuarios?rol=supervisor → poblar -->
+          <select id="inp-autoriza">
+            <option value="">Seleccionar autorizador</option>
+            <option value="1">Ing. Roberto Sánchez</option>
+            <option value="2">Lic. María González</option>
+            <option value="3">Dr. Carlos Mendoza</option>
+          </select>
+          <span class="field-hint">Dejar vacío para flujo automático</span>
+        </div>
+        <div class="field">
+          <label>Observaciones</label>
+          <input type="text" id="inp-obs" placeholder="Notas adicionales (opcional)">
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitPase()">
+        <!-- spinner para estado loading -->
+        <svg class="spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span class="btn-text">Guardar Pase</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PANEL DETALLE (slide-in)
+════════════════════════════════════════════ -->
+<div class="detail-overlay" id="detail-overlay" onclick="closeDetailOutside(event)">
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-header">
+      <div>
+        <div class="detail-title" id="detail-title">Pase #PS-2024-001</div>
+        <!-- AJAX: GET /api/pases/{id} → llenar detalle -->
+        <div class="detail-id" id="detail-date">Solicitado el 15 May 2024</div>
+      </div>
+      <button class="btn-close" onclick="closeDetail()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="detail-body">
+      <!-- Tarjeta empleado -->
+      <div class="detail-employee-card">
+        <div class="detail-emp-avatar" id="detail-avatar" style="background:#8b5cf6">JR</div>
+        <div>
+          <div class="detail-emp-name" id="detail-emp-name">Juan Ramírez López</div>
+          <div class="detail-emp-dept" id="detail-emp-dept">Tecnologías de Información</div>
+          <div class="detail-emp-badge">
+            <span class="badge-status status-pending" id="detail-status">Pendiente</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info general -->
+      <div>
+        <div class="detail-section-title">Información del pase</div>
+        <div class="detail-grid">
+          <div class="detail-field">
+            <div class="detail-field-lbl">Tipo</div>
+            <div class="detail-field-val" id="detail-tipo">Personal</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-lbl">Destino</div>
+            <div class="detail-field-val" id="detail-destino">Proveedor externo</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-lbl">Salida</div>
+            <div class="detail-field-val" id="detail-salida">15 May 2024, 09:00</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-lbl">Regreso esperado</div>
+            <div class="detail-field-val" id="detail-regreso">15 May 2024, 14:00</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-lbl">Autoriza</div>
+            <div class="detail-field-val" id="detail-autoriza">Ing. Roberto Sánchez</div>
+          </div>
+          <div class="detail-field">
+            <div class="detail-field-lbl">Folio</div>
+            <div class="detail-field-val" id="detail-folio">PS-2024-001</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Motivo -->
+      <div>
+        <div class="detail-section-title">Motivo de salida</div>
+        <p id="detail-motivo" style="font-size:13.5px; color:var(--text2); line-height:1.6;">
+          Visita a proveedor para revisión de equipos de cómputo solicitados para el área de sistemas.
+        </p>
+      </div>
+
+      <!-- Timeline -->
+      <div>
+        <div class="detail-section-title">Historial</div>
+        <div class="timeline" id="detail-timeline">
+          <!-- AJAX: GET /api/pases/{id}/historial → renderTimeline(data) -->
+          <div class="timeline-item">
+            <div class="timeline-dot violet">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <div class="timeline-info">
+              <div class="timeline-event">Pase creado</div>
+              <div class="timeline-meta">15 May 2024, 08:32 · Juan Ramírez</div>
+            </div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="timeline-info">
+              <div class="timeline-event">Enviado a autorización</div>
+              <div class="timeline-meta">15 May 2024, 08:33 · Sistema</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-footer" id="detail-footer">
+      <!-- AJAX: POST /api/pases/{id}/aprobar -->
+      <button class="btn-approve" onclick="aprobarPase()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+        Aprobar
+      </button>
+      <!-- AJAX: POST /api/pases/{id}/rechazar -->
+      <button class="btn-reject" onclick="rechazarPase()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Rechazar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">
+  <span id="toast-icon" class="toast-icon"></span>
+  <span id="toast-msg"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════ -->
+<script>
+/* ─────────────────────────────────────────
+   DATOS DE EJEMPLO (reemplazar con AJAX)
+   Estructura que debe devolver tu API:
+   GET /api/pases → { data: [...], meta: { total, page, per_page, last_page } }
+───────────────────────────────────────── */
+const SAMPLE_DATA = [
+  { id:1, folio:'PS-2024-048', nombre:'Juan Ramírez López',   dept:'TI',        tipo:'personal',  salida:'2024-05-15 09:00', regreso:'2024-05-15 14:00', motivo:'Visita a proveedor de equipos',        estatus:'pendiente',  color:'#8b5cf6' },
+  { id:2, folio:'PS-2024-047', nombre:'Ana García Medina',    dept:'RH',        tipo:'material',  salida:'2024-05-15 10:30', regreso:'2024-05-15 12:00', motivo:'Entrega de documentos notariales',     estatus:'aprobado',   color:'#3b82f6' },
+  { id:3, folio:'PS-2024-046', nombre:'Carlos Mendoza Ríos',  dept:'FIN',       tipo:'vehiculo',  salida:'2024-05-14 08:00', regreso:'2024-05-14 18:00', motivo:'Viaje a sucursal norte para auditoría', estatus:'devuelto',   color:'#10b981' },
+  { id:4, folio:'PS-2024-045', nombre:'Laura Torres Vega',    dept:'OPS',       tipo:'personal',  salida:'2024-05-14 13:00', regreso:'2024-05-14 15:30', motivo:'Consulta médica IMSS',                  estatus:'aprobado',   color:'#f59e0b' },
+  { id:5, folio:'PS-2024-044', nombre:'Roberto Soto Díaz',    dept:'VEN',       tipo:'visita',    salida:'2024-05-13 09:00', regreso:'2024-05-13 11:00', motivo:'Visita de cliente externo',             estatus:'rechazado',  color:'#ef4444' },
+  { id:6, folio:'PS-2024-043', nombre:'María López Herrera',  dept:'ADM',       tipo:'personal',  salida:'2024-05-13 07:00', regreso:'2024-05-13 09:00', motivo:'Trámites banco institucional',          estatus:'aprobado',   color:'#6366f1' },
+  { id:7, folio:'PS-2024-042', nombre:'Pedro Jiménez Cruz',   dept:'LOG',       tipo:'vehiculo',  salida:'2024-05-12 06:00', regreso:'2024-05-12 20:00', motivo:'Ruta de distribución zona sur',         estatus:'aprobado',   color:'#14b8a6' },
+  { id:8, folio:'PS-2024-041', nombre:'Sofía Ramírez Núñez',  dept:'TI',        tipo:'material',  salida:'2024-05-12 11:00', regreso:'2024-05-12 13:00', motivo:'Préstamo de equipo a filial',           estatus:'vencido',    color:'#8b5cf6' },
+  { id:9, folio:'PS-2024-040', nombre:'Luis Hernández Mora',  dept:'OPS',       tipo:'personal',  salida:'2024-05-11 14:00', regreso:'2024-05-11 17:00', motivo:'Capacitación externa CONALEP',          estatus:'pendiente',  color:'#f59e0b' },
+  { id:10,folio:'PS-2024-039', nombre:'Diana Flores Reyes',   dept:'RH',        tipo:'personal',  salida:'2024-05-11 09:00', regreso:'2024-05-11 12:00', motivo:'Reclutamiento y selección externo',     estatus:'aprobado',   color:'#3b82f6' },
+];
+
+const STATUS_LABELS = {
+  pendiente:  { cls:'status-pending',  txt:'Pendiente'  },
+  aprobado:   { cls:'status-approved', txt:'Aprobado'   },
+  rechazado:  { cls:'status-rejected', txt:'Rechazado'  },
+  devuelto:   { cls:'status-returned', txt:'Devuelto'   },
+  vencido:    { cls:'status-expired',  txt:'Vencido'    },
+};
+const TYPE_ICONS = {
+  personal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>',
+  material: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14M5 8a2 2 0 01-2-2V4h18v2a2 2 0 01-2 2M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>',
+  vehiculo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+  visita:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+};
+
+let currentPaseId = null;
+let currentPage   = 1;
+let currentSort   = { col:'folio', dir:'asc' };
+let currentTab    = 'todos';
+
+/* ─────────────────────────────────────────
+   RENDER TABLE
+   En tu implementación AJAX reemplaza renderRows()
+   con el resultado de $.ajax o fetch a tu endpoint
+───────────────────────────────────────── */
+function renderRows(data) {
+  const tbody = document.getElementById('pases-tbody');
+  const empty = document.getElementById('empty-state');
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  tbody.innerHTML = data.map(p => {
+    const st = STATUS_LABELS[p.estatus] || { cls:'', txt:p.estatus };
+    const initials = p.nombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+    const tipoIcon = TYPE_ICONS[p.tipo] || '';
+    const tipoLabel = { personal:'Personal', material:'Material', vehiculo:'Vehículo', visita:'Visita' }[p.tipo] || p.tipo;
+    return `
+    <tr>
+      <td><span class="td-id">${p.folio}</span></td>
+      <td>
+        <div class="td-employee">
+          <div class="emp-avatar" style="background:${p.color}">${initials}</div>
+          <div>
+            <div class="emp-name">${p.nombre}</div>
+            <div class="emp-dept">${p.dept}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="td-type">${tipoIcon}${tipoLabel}</span></td>
+      <td style="color:var(--text2);font-size:12.5px;">${formatDate(p.salida)}</td>
+      <td style="color:var(--text2);font-size:12.5px;">${formatDate(p.regreso)}</td>
+      <td style="color:var(--text2);font-size:12.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.motivo}">${p.motivo}</td>
+      <td><span class="badge-status ${st.cls}">${st.txt}</span></td>
+      <td>
+        <div class="td-actions">
+          <button class="action-btn view"    title="Ver detalle"  onclick="openDetail(${p.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          ${p.estatus === 'pendiente' ? `
+          <button class="action-btn approve" title="Aprobar"      onclick="aprobarDirecto(${p.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+          </button>
+          <button class="action-btn reject"  title="Rechazar"     onclick="rechazarDirecto(${p.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>` : ''}
+          <button class="action-btn print"   title="Imprimir"     onclick="imprimirPase(${p.id})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function formatDate(str) {
+  if (!str) return '—';
+  const d = new Date(str);
+  return isNaN(d) ? str : d.toLocaleString('es-MX', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+/* Carga inicial — reemplazar con llamada AJAX */
+function loadPases() {
+  /*
+  ── REEMPLAZAR CON TU LLAMADA AJAX ──────────────────────────
+  $.ajax({
+    url: 'api/pases.php',
+    type: 'GET',
+    data: {
+      q:       $('#search-input').val(),
+      estatus: $('#filter-status').val(),
+      tipo:    $('#filter-type').val(),
+      periodo: $('#filter-date').val(),
+      tab:     currentTab,
+      sort:    currentSort.col,
+      dir:     currentSort.dir,
+      page:    currentPage
+    },
+    success: function(res) {
+      renderRows(res.data);
+      updatePagination(res.meta);
+    },
+    error: function() { showToast('Error al cargar los pases.', 'error'); }
+  });
+  ────────────────────────────────────────────────────────── */
+  renderRows(SAMPLE_DATA);                    // ← quitar al conectar AJAX
+}
+
+/* ─────────────────────────────────────────
+   MODAL
+───────────────────────────────────────── */
+function openModal(id) {
+  currentPaseId = id || null;
+  const isEdit = !!id;
+  document.getElementById('modal-title').textContent    = isEdit ? 'Editar Pase de Salida' : 'Nuevo Pase de Salida';
+  document.getElementById('modal-subtitle').textContent = isEdit ? `Folio: PS-2024-0${id}` : 'Completa los datos del pase';
+
+  if (isEdit) {
+    /*
+    ── AJAX PARA CARGAR DATOS ──────────────────────────────────
+    $.ajax({
+      url: `api/pases.php?id=${id}`,
+      success: function(p) {
+        document.getElementById('pase-id').value      = p.id;
+        document.getElementById('inp-empleado').value = p.nombre;
+        document.getElementById('inp-departamento').value = p.dept;
+        document.getElementById('inp-tipo').value     = p.tipo;
+        document.getElementById('inp-destino').value  = p.destino;
+        document.getElementById('inp-salida').value   = p.salida;
+        document.getElementById('inp-regreso').value  = p.regreso;
+        document.getElementById('inp-motivo').value   = p.motivo;
+        document.getElementById('inp-obs').value      = p.observaciones;
+      }
+    });
+    ────────────────────────────────────────────────────────── */
+  } else {
+    document.getElementById('pase-id').value = '';
+    ['empleado','departamento','tipo','destino','salida','regreso','motivo','obs'].forEach(f => {
+      const el = document.getElementById('inp-' + f);
+      if (el) el.value = f === 'salida' ? new Date().toISOString().slice(0,16) : '';
+    });
+    clearErrors();
+  }
+  document.getElementById('btn-submit').querySelector('.btn-text').textContent = isEdit ? 'Actualizar' : 'Guardar Pase';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+function clearErrors() {
+  document.querySelectorAll('.field.has-error').forEach(f => f.classList.remove('has-error'));
+}
+
+function validateForm() {
+  clearErrors();
+  let valid = true;
+  const required = ['empleado','departamento','tipo','salida','regreso','motivo'];
+  required.forEach(f => {
+    const el = document.getElementById('inp-' + f);
+    const wrap = document.getElementById('field-' + f) || el?.closest('.field');
+    if (el && !el.value.trim()) { wrap?.classList.add('has-error'); valid = false; }
+  });
+  return valid;
+}
+
+function submitPase() {
+  if (!validateForm()) { showToast('Completa los campos requeridos.', 'error'); return; }
+  const btn = document.getElementById('btn-submit');
+  btn.classList.add('loading');
+
+  const payload = {
+    id:           document.getElementById('pase-id').value,
+    empleado:     document.getElementById('inp-empleado').value,
+    departamento: document.getElementById('inp-departamento').value,
+    tipo:         document.getElementById('inp-tipo').value,
+    destino:      document.getElementById('inp-destino').value,
+    salida:       document.getElementById('inp-salida').value,
+    regreso:      document.getElementById('inp-regreso').value,
+    motivo:       document.getElementById('inp-motivo').value,
+    autoriza:     document.getElementById('inp-autoriza').value,
+    observaciones:document.getElementById('inp-obs').value,
+  };
+
+  /*
+  ── REEMPLAZAR CON TU LLAMADA AJAX ──────────────────────────
+  $.ajax({
+    url:  'api/pases.php',
+    type: payload.id ? 'PUT' : 'POST',
+    data: payload,
+    success: function(res) {
+      btn.classList.remove('loading');
+      closeModal();
+      showToast(payload.id ? 'Pase actualizado.' : 'Pase creado correctamente.', 'success');
+      loadPases();
+    },
+    error: function() {
+      btn.classList.remove('loading');
+      showToast('Error al guardar el pase.', 'error');
+    }
+  });
+  ────────────────────────────────────────────────────────── */
+
+  /* Simulación visual (quitar al conectar AJAX) */
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    closeModal();
+    showToast(payload.id ? 'Pase actualizado.' : 'Pase creado correctamente.', 'success');
+    loadPases();
+  }, 1100);
+}
+
+/* ─────────────────────────────────────────
+   DETAIL PANEL
+───────────────────────────────────────── */
+function openDetail(id) {
+  currentPaseId = id;
+  /*
+  ── REEMPLAZAR CON TU LLAMADA AJAX ──────────────────────────
+  $.ajax({
+    url: `api/pases.php?id=${id}&historial=1`,
+    success: function(p) {
+      fillDetailPanel(p);
+      document.getElementById('detail-overlay').classList.add('open');
+    }
+  });
+  ────────────────────────────────────────────────────────── */
+  const p = SAMPLE_DATA.find(x => x.id === id) || SAMPLE_DATA[0];
+  fillDetailPanel(p);
+  document.getElementById('detail-overlay').classList.add('open');
+
+  const footer = document.getElementById('detail-footer');
+  footer.style.display = p.estatus === 'pendiente' ? 'flex' : 'none';
+}
+
+function fillDetailPanel(p) {
+  const st = STATUS_LABELS[p.estatus] || { cls:'', txt:p.estatus };
+  const initials = p.nombre.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  document.getElementById('detail-title').textContent       = 'Pase ' + p.folio;
+  document.getElementById('detail-date').textContent        = 'Solicitado: ' + formatDate(p.salida);
+  document.getElementById('detail-avatar').textContent      = initials;
+  document.getElementById('detail-avatar').style.background = p.color;
+  document.getElementById('detail-emp-name').textContent    = p.nombre;
+  document.getElementById('detail-emp-dept').textContent    = p.dept;
+  document.getElementById('detail-status').className        = 'badge-status ' + st.cls;
+  document.getElementById('detail-status').textContent      = st.txt;
+  document.getElementById('detail-tipo').textContent        = { personal:'Personal', material:'Material / Equipo', vehiculo:'Vehículo', visita:'Visita' }[p.tipo] || p.tipo;
+  document.getElementById('detail-destino').textContent     = p.destino || '—';
+  document.getElementById('detail-salida').textContent      = formatDate(p.salida);
+  document.getElementById('detail-regreso').textContent     = formatDate(p.regreso);
+  document.getElementById('detail-autoriza').textContent    = p.autoriza || 'Por definir';
+  document.getElementById('detail-folio').textContent       = p.folio;
+  document.getElementById('detail-motivo').textContent      = p.motivo;
+}
+
+function closeDetail() { document.getElementById('detail-overlay').classList.remove('open'); }
+function closeDetailOutside(e) { if (e.target === document.getElementById('detail-overlay')) closeDetail(); }
+
+/* ─────────────────────────────────────────
+   ACCIONES DE PASE
+───────────────────────────────────────── */
+function aprobarPase() { cambiarEstatus(currentPaseId, 'aprobar'); closeDetail(); }
+function rechazarPase(){ cambiarEstatus(currentPaseId, 'rechazar'); closeDetail(); }
+function aprobarDirecto(id){ cambiarEstatus(id, 'aprobar'); }
+function rechazarDirecto(id){ cambiarEstatus(id, 'rechazar'); }
+
+function cambiarEstatus(id, accion) {
+  /*
+  ── REEMPLAZAR CON TU LLAMADA AJAX ──────────────────────────
+  $.ajax({
+    url:  `api/pases.php?id=${id}&accion=${accion}`,
+    type: 'POST',
+    success: function() {
+      showToast(accion === 'aprobar' ? 'Pase aprobado.' : 'Pase rechazado.', accion === 'aprobar' ? 'success' : 'error');
+      loadPases();
+    },
+    error: function() { showToast('Error al procesar la acción.', 'error'); }
+  });
+  ────────────────────────────────────────────────────────── */
+  showToast(accion === 'aprobar' ? '✓ Pase aprobado correctamente.' : 'Pase rechazado.', accion === 'aprobar' ? 'success' : 'error');
+  loadPases();
+}
+
+function imprimirPase(id) {
+  /*
+  ── REEMPLAZAR CON TU LLAMADA AJAX / WINDOW.PRINT ───────────
+  window.open(`api/pases_print.php?id=${id}`, '_blank');
+  ────────────────────────────────────────────────────────── */
+  showToast('Generando documento para impresión...', 'info');
+}
+
+/* ─────────────────────────────────────────
+   FILTROS / BÚSQUEDA / PAGINACIÓN
+───────────────────────────────────────── */
+let searchTimer;
+function handleSearch(val) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    currentPage = 1;
+    loadPases(); /* AJAX con q=val */
+  }, 350);
+}
+
+function handleFilter() {
+  currentPage = 1;
+  loadPases();
+}
+
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTab = tab;
+  currentPage = 1;
+  loadPases();
+}
+
+function sortTable(col) {
+  if (currentSort.col === col) {
+    currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSort = { col, dir: 'asc' };
+  }
+  document.querySelectorAll('th.sortable').forEach(th => th.classList.remove('asc','desc'));
+  const target = [...document.querySelectorAll('th.sortable')].find(th => th.onclick?.toString().includes(col));
+  if (target) target.classList.add(currentSort.dir);
+  loadPases();
+}
+
+function goPage(p) {
+  if (p === 'prev') { if (currentPage > 1) currentPage--; }
+  else if (p === 'next') { currentPage++; }
+  else { currentPage = p; }
+  loadPases();
+  /* AJAX actualiza tabla y paginación */
+}
+
+function exportar() {
+  showToast('Preparando exportación...', 'info');
+  /*
+  ── REEMPLAZAR CON TU LLAMADA AJAX ──────────────────────────
+  window.location.href = 'api/pases_export.php?format=xlsx&' + new URLSearchParams({
+    estatus: document.getElementById('filter-status').value,
+    tipo:    document.getElementById('filter-type').value,
+    periodo: document.getElementById('filter-date').value,
+  });
+  ────────────────────────────────────────────────────────── */
+}
+
+/* ─────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────── */
+function toggleCollapse() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  document.body.classList.toggle('sidebar-collapsed');
+}
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+/* ─────────────────────────────────────────
+   TOAST
+───────────────────────────────────────── */
+function showToast(msg, type) {
+  const icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>',
+    error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+    info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>',
+  };
+  const t = document.getElementById('toast');
+  t.className = 'toast toast-' + (type || 'info');
+  document.getElementById('toast-icon').innerHTML = icons[type] || icons.info;
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('visible'), 3400);
+}
+
+/* ─────────────────────────────────────────
+   INIT
+───────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  loadPases();
+  document.getElementById('inp-salida').value = new Date().toISOString().slice(0,16);
+});
+</script>
+</body>
+</html>
